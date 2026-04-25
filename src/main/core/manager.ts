@@ -541,7 +541,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
                   patchControledMihomoConfig({ tun: { enable: false } })
                   mainWindow?.webContents.send('controledMihomoConfigUpdated')
                   ipcMain.emit('updateTrayMenu')
-                  reject('虚拟网卡启动失败，前往内核设置页尝试手动授予内核权限')
+                  reject('虚拟网卡启动失败，请检查服务运行状态或配置')
                 }
 
                 if (providerTracker.isReady(logLine)) {

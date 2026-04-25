@@ -119,6 +119,9 @@ function systemCorePath(): string {
 }
 
 export function servicePath(): string {
+  if (process.platform === 'linux') {
+    return '/usr/bin/sparkle-service'
+  }
   const isWin = process.platform === 'win32'
   return path.join(resourcesFilesDir(), `sparkle-service${isWin ? '.exe' : ''}`)
 }
