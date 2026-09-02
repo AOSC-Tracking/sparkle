@@ -7,6 +7,14 @@ allowBuilds:
   meta-json-schema: true
 overrides:
   typescript-eslint: ^8.59.2
+  electron: 42.3.0
+  electron-builder: npm:@loongdotjs/electron-builder@26.15.6
+  vite: ^7.0.0
+  '@vitejs/plugin-legacy': ^7.0.0
+  '@vitejs/plugin-react': ^5.0.0
+  rolldown: npm:@rolldown/binding-wasm32-wasi
+  lightningcss: npm:lightningcss-wasm
+  '@tailwindcss/oxide': npm:@tailwindcss/oxide-wasm32-wasi
 patchedDependencies:
   monaco-worker-manager@2.0.1: patches/monaco-worker-manager@2.0.1.patch
 publicHoistPattern:
