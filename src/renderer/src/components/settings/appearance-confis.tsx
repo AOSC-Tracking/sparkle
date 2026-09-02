@@ -49,7 +49,6 @@ const AppearanceConfig: React.FC = () => {
     spinFloatingIcon = true,
     useWindowFrame = false,
     enableWindowDrag = false,
-    showUpdateButtonAfterNotification = true,
     customTheme = 'default.css',
     appTheme = 'system'
   } = appConfig || {}
@@ -304,15 +303,6 @@ const AppearanceConfig: React.FC = () => {
             />
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title="显示更新按钮" divider>
-          <Switch
-            size="sm"
-            isSelected={showUpdateButtonAfterNotification}
-            onValueChange={(v) => {
-              patchAppConfig({ showUpdateButtonAfterNotification: v })
-            }}
-          />
-        </SettingItem>
         <SettingItem compatKey="legacy" title="背景色" divider>
           <Tabs
             size="sm"

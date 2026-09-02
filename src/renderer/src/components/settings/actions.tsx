@@ -2,15 +2,12 @@ import { Button, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import {
-  checkUpdate,
   createHeapSnapshot,
   quitApp,
   quitWithoutCore,
-  resetAppConfig,
-  cancelUpdate
+  resetAppConfig
 } from '@renderer/utils/ipc'
-import { useState, useEffect } from 'react'
-import UpdaterDrawer from '../updater/updater-drawer'
+import { useState } from 'react'
 import { version } from '@renderer/utils/init'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { startTour } from '@renderer/utils/driver'
@@ -29,62 +26,10 @@ async function handleCreateHeapSnapshot(): Promise<void> {
 
 const Actions: React.FC = () => {
   const navigate = useNavigate()
-  const [newVersion, setNewVersion] = useState('')
-  const [changelog, setChangelog] = useState('')
-  const [openUpdate, setOpenUpdate] = useState(false)
-  const [updateDrawerReopenSignal, setUpdateDrawerReopenSignal] = useState(0)
-  const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [updateStatus, setUpdateStatus] = useState<{
-    downloading: boolean
-    progress: number
-    error?: string
-  }>({
-    downloading: false,
-    progress: 0
-  })
-
-  useEffect(() => {
-    const handleUpdateStatus = (
-      _: Electron.IpcRendererEvent,
-      status: typeof updateStatus
-    ): void => {
-      setUpdateStatus(status)
-    }
-
-    const unsubscribe = window.electron.ipcRenderer.on('update-status', handleUpdateStatus)
-
-    return (): void => {
-      unsubscribe()
-    }
-  }, [])
-
-  const handleCancelUpdate = async (): Promise<void> => {
-    try {
-      await cancelUpdate()
-      setUpdateStatus({ downloading: false, progress: 0 })
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  const openUpdateDrawer = (): void => {
-    setOpenUpdate(true)
-    setUpdateDrawerReopenSignal((signal) => signal + 1)
-  }
 
   return (
     <>
-      {openUpdate && (
-        <UpdaterDrawer
-          onClose={() => setOpenUpdate(false)}
-          version={newVersion}
-          changelog={changelog}
-          updateStatus={updateStatus}
-          reopenSignal={updateDrawerReopenSignal}
-          onCancel={handleCancelUpdate}
-        />
-      )}
       {confirmOpen && (
         <ConfirmModal
           onChange={setConfirmOpen}
@@ -104,41 +49,6 @@ const Actions: React.FC = () => {
         <SettingItem compatKey="legacy" title="打开引导页面" divider>
           <Button size="sm" onPress={() => startTour(navigate)}>
             打开引导页面
-          </Button>
-        </SettingItem>
-        <SettingItem compatKey="legacy" title="检查更新" divider>
-          <Button
-            size="sm"
-            isLoading={checkingUpdate}
-            onPress={async () => {
-              try {
-                setCheckingUpdate(true)
-                const version = await checkUpdate()
-                if (version) {
-                  setNewVersion(version.version)
-                  setChangelog(version.changelog)
-                  notify('发现新版本', {
-                    actionProps: {
-                      children: '查看内容',
-                      onPress: openUpdateDrawer,
-                      variant: 'secondary'
-                    },
-                    body: `${version.version} 版本就绪`,
-                    forceToast: true,
-                    timeout: 8000,
-                    variant: 'accent'
-                  })
-                } else {
-                  notify('当前已是最新版本', { body: '无需更新' })
-                }
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              } finally {
-                setCheckingUpdate(false)
-              }
-            }}
-          >
-            检查更新
           </Button>
         </SettingItem>
         <SettingItem

@@ -14,8 +14,6 @@ const GeneralConfig: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     silentStart = false,
-    autoCheckUpdate,
-    updateChannel = 'stable',
     notificationMode = 'system',
     disableGPU = false,
     disableAnimation = false
@@ -79,28 +77,6 @@ const GeneralConfig: React.FC = () => {
               patchAppConfig({ silentStart: v })
             }}
           />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title="自动检查更新" divider>
-          <Switch
-            size="sm"
-            isSelected={autoCheckUpdate}
-            onValueChange={(v) => {
-              patchAppConfig({ autoCheckUpdate: v })
-            }}
-          />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title="更新通道" divider>
-          <Tabs
-            size="sm"
-            color="primary"
-            selectedKey={updateChannel}
-            onSelectionChange={async (v) => {
-              patchAppConfig({ updateChannel: v as AppUpdateChannel })
-            }}
-          >
-            <Tab key="stable" title="正式版" />
-            <Tab key="rolling" title="滚动版" />
-          </Tabs>
         </SettingItem>
         <SettingItem compatKey="legacy" title="通知形式" divider>
           <Tabs

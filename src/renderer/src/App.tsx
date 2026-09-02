@@ -6,16 +6,14 @@ import { Button, Divider } from '@heroui/react'
 import { IoSettings } from 'react-icons/io5'
 import routes, { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { applyTheme, checkUpdate, setNativeTheme, setTitleBarOverlay } from '@renderer/utils/ipc'
+import { applyTheme, setNativeTheme, setTitleBarOverlay } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { TitleBarOverlayOptions } from 'electron'
 import MihomoIcon from './components/base/mihomo-icon'
-import useSWR from 'swr'
 
 const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm'))
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
 const SiderCards = lazy(() => siderCardsPromise)
-const UpdaterButton = lazy(() => import('@renderer/components/updater/updater-button'))
 
 let navigate: NavigateFunction
 
@@ -26,9 +24,6 @@ const App: React.FC = () => {
     customTheme,
     useWindowFrame = false,
     siderWidth = 250,
-    autoCheckUpdate,
-    updateChannel = 'stable',
-    showUpdateButtonAfterNotification = true,
     disableAnimation = false
   } = appConfig || {}
   const narrowWidth = platform === 'darwin' ? 70 : 60
@@ -55,13 +50,6 @@ const App: React.FC = () => {
       }
     }
   }
-  const { data: latest } = useSWR(
-    autoCheckUpdate ? ['checkUpdate', updateChannel] : undefined,
-    autoCheckUpdate ? checkUpdate : (): undefined => {},
-    {
-      refreshInterval: 1000 * 60 * 10
-    }
-  )
 
   useEffect(() => {
     setSiderWidthValue(siderWidth)
@@ -292,15 +280,6 @@ const App: React.FC = () => {
             <SiderCards iconOnly />
           </Suspense>
           <div className="px-2 pt-2 pb-4 flex shrink-0 flex-col items-center space-y-2">
-            {latest && latest.version && (
-              <Suspense fallback={null}>
-                <UpdaterButton
-                  iconOnly={true}
-                  latest={latest}
-                  showButtonAfterNotification={showUpdateButtonAfterNotification}
-                />
-              </Suspense>
-            )}
             <OutboundModeSwitcher iconOnly />
             <Button
               size="sm"
@@ -328,14 +307,6 @@ const App: React.FC = () => {
               <div className="flex ml-1">
                 <h3 className="text-lg font-bold leading-8">Sparkle</h3>
               </div>
-              {latest && latest.version && (
-                <Suspense fallback={null}>
-                  <UpdaterButton
-                    latest={latest}
-                    showButtonAfterNotification={showUpdateButtonAfterNotification}
-                  />
-                </Suspense>
-              )}
               <Button
                 size="sm"
                 className="app-nodrag"
