@@ -2,7 +2,6 @@ import { Button, Select, SelectItem, Switch, Tab, Tabs } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
-import PermissionModal from '@renderer/components/mihomo/permission-modal'
 import ServiceModal from '@renderer/components/mihomo/service-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -10,11 +9,8 @@ import PortSetting from '@renderer/components/mihomo/port-setting'
 import { platform } from '@renderer/utils/init'
 import PubSub from 'pubsub-js'
 import {
-  manualGrantCorePermition,
   restartCore,
-  revokeCorePermission,
   findSystemMihomo,
-  deleteElevateTask,
   installService,
   uninstallService,
   startService,
@@ -55,15 +51,12 @@ const Mihomo: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     core = 'system',
-    corePermissionMode = 'elevated',
     serviceRunMode = 'auto',
-    coreStartupMode = 'post-up',
     mihomoCpuPriority = 'PRIORITY_NORMAL'
   } = appConfig || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { ipv6 } = controledMihomoConfig || {}
 
-  const [showPermissionModal, setShowPermissionModal] = useState(false)
   const [showServiceModal, setShowServiceModal] = useState(false)
   const [systemCorePaths, setSystemCorePaths] = useState<string[]>(systemCorePathsCache || [])
   const [loadingPaths, setLoadingPaths] = useState(systemCorePathsCache === null)
@@ -110,39 +103,8 @@ const Mihomo: React.FC = () => {
     handleConfigChangeWithRestart('core', newCore)
   }
 
-  const handlePermissionModeChange = async (key: string): Promise<void> => {
-    if (key === corePermissionMode) return
-
-    try {
-      await patchAppConfig({ corePermissionMode: key as 'elevated' | 'service' })
-      await restartCore()
-    } catch (e) {
-      notify(e, { variant: 'danger' })
-    }
-  }
-
   return (
     <BasePage title="内核设置" contentClassName="no-scrollbar">
-      {showPermissionModal && (
-        <PermissionModal
-          onChange={setShowPermissionModal}
-          onRevoke={async () => {
-            if (platform === 'win32') {
-              await deleteElevateTask()
-              notify('提权配置已取消')
-            } else {
-              await revokeCorePermission()
-              notify('内核权限已撤销')
-            }
-            await restartCore()
-          }}
-          onGrant={async () => {
-            await manualGrantCorePermition()
-            notify(platform === 'win32' ? '提权配置成功' : '内核授权成功')
-            await restartCore()
-          }}
-        />
-      )}
       {showServiceModal && (
         <ServiceModal
           onChange={setShowServiceModal}
@@ -242,17 +204,11 @@ const Mihomo: React.FC = () => {
           </Select>
         </SettingItem>
         <SettingItem compatKey="legacy" title="运行模式" divider>
-          <Tabs
-            size="sm"
-            color="primary"
-            selectedKey={corePermissionMode}
-            onSelectionChange={(key) => handlePermissionModeChange(key as string)}
-          >
-            <Tab key="elevated" title="直接运行" />
+          <Tabs size="sm" color="primary" selectedKey="service">
             <Tab key="service" title="系统服务" />
           </Tabs>
         </SettingItem>
-        {platform === 'linux' && corePermissionMode === 'service' && (
+        {platform === 'linux' && (
           <SettingItem compatKey="legacy" title="服务核心运行方式" divider>
             <Tabs
               size="sm"
@@ -266,24 +222,6 @@ const Mihomo: React.FC = () => {
             </Tabs>
           </SettingItem>
         )}
-        {corePermissionMode !== 'service' && (
-          <SettingItem compatKey="legacy" title="启动检测方式" divider>
-            <Tabs
-              size="sm"
-              color="primary"
-              selectedKey={coreStartupMode}
-              onSelectionChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
-            >
-              <Tab key="post-up" title="Post Up" />
-              <Tab key="log" title="日志解析" />
-            </Tabs>
-          </SettingItem>
-        )}
-        <SettingItem compatKey="legacy" title="提权状态" divider>
-          <Button size="sm" color="primary" onPress={() => setShowPermissionModal(true)}>
-            管理
-          </Button>
-        </SettingItem>
         <SettingItem compatKey="legacy" title="服务状态" divider>
           <Button size="sm" color="primary" onPress={() => setShowServiceModal(true)}>
             管理
