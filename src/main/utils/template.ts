@@ -1,7 +1,7 @@
 import os from 'os'
 
 export const defaultConfig: AppConfig = {
-  core: 'mihomo',
+  core: 'system',
   updateChannel: 'stable',
   notificationMode: 'system',
   showUpdateButtonAfterNotification: true,

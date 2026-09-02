@@ -8,11 +8,9 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import PortSetting from '@renderer/components/mihomo/port-setting'
 import { platform } from '@renderer/utils/init'
-import { IoMdCloudDownload } from 'react-icons/io'
 import PubSub from 'pubsub-js'
 import {
   manualGrantCorePermition,
-  mihomoUpgrade,
   restartCore,
   revokeCorePermission,
   findSystemMihomo,
@@ -56,7 +54,7 @@ getSystemCorePaths().catch(() => {})
 const Mihomo: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
-    core = 'mihomo',
+    core = 'system',
     corePermissionMode = 'elevated',
     serviceRunMode = 'auto',
     coreStartupMode = 'post-up',
@@ -65,7 +63,6 @@ const Mihomo: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { ipv6 } = controledMihomoConfig || {}
 
-  const [upgrading, setUpgrading] = useState(false)
   const [showPermissionModal, setShowPermissionModal] = useState(false)
   const [showServiceModal, setShowServiceModal] = useState(false)
   const [systemCorePaths, setSystemCorePaths] = useState<string[]>(systemCorePathsCache || [])
@@ -95,29 +92,13 @@ const Mihomo: React.FC = () => {
     }
   }
 
-  const handleCoreUpgrade = async (): Promise<void> => {
-    try {
-      setUpgrading(true)
-      await mihomoUpgrade(core === 'mihomo' ? 'release' : 'alpha')
-      setTimeout(() => PubSub.publish('mihomo-core-changed'), 2000)
-    } catch (e) {
-      if (typeof e === 'string' && e.includes('already using latest version')) {
-        notify('已经是最新版本')
-      } else {
-        notify(e, { variant: 'danger' })
-      }
-    } finally {
-      setUpgrading(false)
-    }
-  }
-
   const handleCoreChange = async (newCore: 'mihomo' | 'mihomo-alpha' | 'system'): Promise<void> => {
     if (newCore === 'system') {
       const paths = await getSystemCorePaths()
 
       if (paths.length === 0) {
         notify('未找到系统内核', {
-          body: '系统中未找到可用的 mihomo 或 clash 内核，已自动切换回内置内核'
+          body: '系统中未找到可用的 mihomo 或 clash 内核'
         })
         return
       }
@@ -188,24 +169,7 @@ const Mihomo: React.FC = () => {
         />
       )}
       <SettingCard>
-        <SettingItem
-          compatKey="legacy"
-          title="内核版本"
-          actions={
-            core === 'mihomo' || core === 'mihomo-alpha' ? (
-              <Button
-                size="sm"
-                isIconOnly
-                variant="light"
-                isLoading={upgrading}
-                onPress={handleCoreUpgrade}
-              >
-                <IoMdCloudDownload className="text-lg" />
-              </Button>
-            ) : null
-          }
-          divider
-        >
+        <SettingItem compatKey="legacy" title="内核版本" actions={null} divider>
           <Select
             aria-label="内核版本"
             classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
@@ -217,8 +181,6 @@ const Mihomo: React.FC = () => {
               handleCoreChange(v.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
             }
           >
-            <SelectItem key="mihomo">内置稳定版</SelectItem>
-            <SelectItem key="mihomo-alpha">内置预览版</SelectItem>
             <SelectItem key="system">使用系统内核</SelectItem>
           </Select>
         </SettingItem>
